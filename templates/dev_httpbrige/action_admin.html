@@ -1,0 +1,40 @@
+
+<!-- table zwave_devices search -->
+<div>
+<a href="#" class="btn btn-primary" onClick="$('#api_settings').toggle();return false;"><#LANG_SETUP#></a>
+</div>
+<div style="display:none" id='api_settings'>
+&nbsp;
+<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+<fieldset>
+<div class="form-group">
+ <label class="control-label"[#if ERR_API_URL#] style="color:red;font-weight:bold"[#endif#]>
+ API URL:
+ (http://xxx.xxx.xxx.xxx:port)
+ </label>
+ <div class="controls"><input type="text" name="api_url" value="[#API_URL#]" class="input"></div>
+</div>
+<div class="form-actions">
+<button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_UPDATE#></button>
+<input type="hidden" name="view_mode" value="update_settings">
+<input type="hidden" name="mode" value="update">
+</div>
+</fieldset>
+</form>
+</div><br>
+ <!-- action usual -->
+ <!-- table dev_httpbrige_devices search -->
+ [#if VIEW_MODE="search_dev_httpbrige_devices" || VIEW_MODE=""#]
+  [#inc dev_httpbrige_devices_search_admin.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_httpbrige_devices search -->
+ <!-- table dev_httpbrige_devices edit -->
+ [#if VIEW_MODE="edit_dev_httpbrige_devices"#]
+   [#inc dev_httpbrige_devices_edit.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_httpbrige_devices edit -->
+ <!-- table dev_httpbrige_devices view --> 
+ [#if VIEW_MODE="view_dev_httpbrige_devices"#]
+   [#inc dev_httpbrige_devices_view.html#]
+ [#endif VIEW_MODE#]
+ <!-- / table dev_httpbrige_devices view -->
