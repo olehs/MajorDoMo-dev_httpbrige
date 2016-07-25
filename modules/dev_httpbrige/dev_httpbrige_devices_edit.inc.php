@@ -17,14 +17,28 @@
    //getUrl($api_command);
    $out['MESSAGE']='Сохранение команд пока не работает. Для сохранения последней команды используйте ссылку '.$this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=save&name='.'<имя команды>';
   }
+  if ($this->mode=='sp_on') {
+   $api_command=$this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=on';
+   getUrl($api_command);
+  }
+  if ($this->mode=='sp_off') {
+   $api_command=$this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=off';
+   getUrl($api_command);
+  }
+  if ($this->mode=='sp_light_on') {
+   $api_command=$this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=&action=lighton';
+   getUrl($api_command);
+  }
+  if ($this->mode=='sp_light_off') {
+   $api_command=$this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=&action=lightoff';
+   getUrl($api_command);
+  }
   if ($this->mode=='update') {
    $ok=1;
   //updating 'LANG_TITLE' (varchar, required)
    //updating 'TYPE' (varchar)
    global $type;
    $rec['TYPE']=$type;
-   if($type=='sp2') {$out['MESSAGE']='Поддержка SP2 пока только в разработке'; }
-   if($type=='spmini') {$out['MESSAGE']='Поддержка SP mini пока только в разработке'; }
    global $title;
    $rec['TITLE']=$title;
    if ($rec['TITLE']=='') {
@@ -55,6 +69,14 @@
     } else {
      $new_rec=1;
      $rec['ID']=SQLInsert($table_name, $rec); // adding new record
+		if ($rec['TYPE'] == 'sp2' || $rec['TYPE'] == 'spmini' || $rec['TYPE'] == 'sp3') {
+			 sg($rec['LINKED_OBJECT'].'.'.'status', '');
+			 addLinkedProperty($rec['LINKED_OBJECT'], 'status', $this->name);
+		}
+		if ($rec['TYPE'] == 'sp3') {
+			 sg($rec['LINKED_OBJECT'].'.'.'lightstatus', '');
+			 addLinkedProperty($rec['LINKED_OBJECT'], 'lightstatus', $this->name);
+		}
     }
     $out['OK']=1;
    } else {

@@ -181,17 +181,42 @@ function usual(&$out) {
 */
  function delete_dev_httpbrige_devices($id) {
   $rec=SQLSelectOne("SELECT * FROM dev_httpbrige_devices WHERE ID='$id'");
-  // some action for related tables
+  if ($rec['TYPE'] == 'sp2' || $rec['TYPE'] == 'spmini' || $rec['TYPE'] == 'sp3') {
+	removeLinkedProperty($rec['LINKED_OBJECT'], 'status', $this->name);
+  }
+  if ($rec['TYPE'] == 'sp3') {
+	removeLinkedProperty($rec['LINKED_OBJECT'], 'lightstatus', $this->name);
+  }
   SQLExec("DELETE FROM dev_httpbrige_devices WHERE ID='".$rec['ID']."'");
  }
  function propertySetHandle($object, $property, $value) {
   $this->getConfig();
    $table='dev_httpbrige_devices';
-   $properties=SQLSelect("SELECT ID FROM $table WHERE LINKED_OBJECT LIKE '".DBSafe($object)."' AND LINKED_PROPERTY LIKE '".DBSafe($property)."'");
+   $properties=SQLSelect("SELECT * FROM $table WHERE LINKED_OBJECT LIKE '".DBSafe($object)."'");
    $total=count($properties);
    if ($total) {
     for($i=0;$i<$total;$i++) {
      //to-do
+		if ($properties[$i]['TYPE'] == 'sp2' || $properties[$i]['TYPE'] == 'spmini' || $properties[$i]['TYPE'] == 'sp3') {
+			if ($property == 'status') {
+				if (gg($properties[$i]['LINKED_OBJECT'].'.'.'status') == 1 ) {
+					$api_command=$this->config['API_URL'].'/?devMAC='.$properties[$i]['MAC'].'&action=on';
+					getUrl($api_command);
+				} else {
+					$api_command=$this->config['API_URL'].'/?devMAC='.$properties[$i]['MAC'].'&action=off';
+					getUrl($api_command);
+				}
+			}
+			if ($property == 'lightstatus') {
+				if (gg($properties[$i]['LINKED_OBJECT'].'.'.'status') == 1 ) {
+					$api_command=$this->config['API_URL'].'/?devMAC='.$properties[$i]['MAC'].'&action=lighton';
+					getUrl($api_command);
+				} else {
+					$api_command=$this->config['API_URL'].'/?devMAC='.$properties[$i]['MAC'].'&action=lightoff';
+					getUrl($api_command);
+				}
+			}
+		}
     }
    }
  }
@@ -210,7 +235,11 @@ function processSubscription($event_name, $details='') {
 		if ($rec['TYPE']=='rm') {
 			$ctx = stream_context_create(array('http' => array('timeout'=>2)));
 			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'], 0, $ctx);
-			if(isset($response) && $response!='') {sg($rec['LINKED_OBJECT'].'.temperature', (float)$response);}
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.temperature', (float)$response);
+			}
+		}
+		if ($rec['TYPE']=='rm3') {
 		}
 		if ($rec['TYPE']=='a1') {
 			$ctx = stream_context_create(array('http' => array('timeout'=>2)));
@@ -221,8 +250,43 @@ function processSubscription($event_name, $details='') {
 				sg($rec['LINKED_OBJECT'].'.humidity', (float)$json->{'humidity'});
 				sg($rec['LINKED_OBJECT'].'.noise', (int)$json->{'noisy'});
 				sg($rec['LINKED_OBJECT'].'.luminosity', (int)$json->{'light'});
-				sg($rec['LINKED_OBJECT'].'.air', (int)$json->{'air'});
+				sg($rec['LINKED_OBJECT'].'.air', (int)$json->{'air'});	
 			}
+		}
+		if ($rec['TYPE']=='sp2') {
+			$ctx = stream_context_create(array('http' => array('timeout'=>2)));
+			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'], 0, $ctx);
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.status', (int)$response);
+			}
+			$response ='';
+			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=power ', 0, $ctx);
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.power', $response);
+			}
+		}
+		if ($rec['TYPE']=='spmini') {
+			$ctx = stream_context_create(array('http' => array('timeout'=>2)));
+			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'], 0, $ctx);
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.status', (int)$response);
+			}
+		}
+		if ($rec['TYPE']=='sp3') {
+			$ctx = stream_context_create(array('http' => array('timeout'=>2)));
+			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'], 0, $ctx);
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.status', (int)$response);
+			}
+			$response ='';
+			$response = file_get_contents($this->config['API_URL'].'/?devMAC='.$rec['MAC'].'&action=lightstatus', 0, $ctx);
+			if(isset($response) && $response!='') {
+				sg($rec['LINKED_OBJECT'].'.lightstatus', $response);
+			}
+		}
+		if(isset($response) && $response!='') {
+			$rec['UPDATED']=date('Y-m-d H:i:s');
+			SQLUpdate('dev_httpbrige_devices', $rec);
 		}
 	}
  }
