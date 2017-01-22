@@ -310,6 +310,7 @@ function processSubscription($event_name, $details='') {
 */
  function uninstall() {
   SQLExec('DROP TABLE IF EXISTS dev_httpbrige_devices');
+  unsubscribeFromEvent($this->name, 'HOURLY');
   parent::uninstall();
  }
 /**
